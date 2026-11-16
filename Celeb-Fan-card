@@ -1179,4 +1179,251 @@ celebrityImages[selected]||fallback(c.name);
 
 document.getElementById("celebPhotoName").textContent=c.name;
 
+/* FAN INFORMATION */
+
+document.getElementById("pName").textContent=name.toUpperCase();
+
+document.getElementById("pSex").textContent=
+document.getElementById("sex").value;
+
+document.getElementById("pType").textContent=type;
+
+document.getElementById("pCountry").textContent=
+document.getElementById("country").value;
+
+document.getElementById("pYear").textContent=year;
+
+document.getElementById("pFav").textContent=
+document.getElementById("fav").value;
+
+
+/* SIGNATURE */
+
+const parts=name.split(" ");
+
+document.getElementById("pSig").textContent=
+parts[0].charAt(0)+". "+(parts.slice(1).join(" ")||"");
+
+
+/* FAN ID */
+
+document.getElementById("pId").textContent=fanID;
+
+document.getElementById("barcodeNum").textContent=fanID;
+
+document.getElementById("backId").textContent=fanID;
+
+
+/* BARCODE */
+
+try{
+
+JsBarcode("#barcode",fanID,{
+format:"CODE128",
+displayValue:false,
+height:35,
+margin:0,
+width:1.5
+});
+
+}catch(error){}
+
+
+/* QR CODE */
+
+const qrData=JSON.stringify({
+type:"Unofficial fan-made collectible",
+celebrity:c.name,
+fan:name,
+fanID:fanID,
+cardType:type
+});
+
+const qr="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data="+
+encodeURIComponent(qrData);
+
+document.getElementById("qrImg").src=qr;
+
+document.getElementById("qrBack").src=qr;
+
+
+/* BENEFITS */
+
+const benefits=document.getElementById("backBenefits").value
+.split("\n")
+.filter(x=>x.trim());
+
+const list=document.getElementById("backBenefitsList");
+
+list.innerHTML="";
+
+benefits.forEach(b=>{
+
+const li=document.createElement("li");
+
+li.textContent=b;
+
+list.appendChild(li);
+
+});
+
+
+/* BACK INFORMATION */
+
+document.getElementById("backTermsText").textContent=
+document.getElementById("backTerms").value;
+
+document.getElementById("backValidText").textContent=
+document.getElementById("backValid").value;
+
+document.getElementById("backContactText").textContent=
+document.getElementById("backContact").value;
+
+
+/* DISCLAIMER ON BOTH SIDES */
+
+document.getElementById("frontDisclaimer").textContent=disclaimer;
+
+document.getElementById("backDisclaimer").textContent=disclaimer;
+
+
+/* ADAPT BACK TEXT TO AVAILABLE SPACE */
+
+fitBackContent();
+
+}
+
+
+/* AUTOMATIC BACK-CARD TEXT FITTING */
+
+function fitBackContent(){
+
+const content=document.querySelector(".back-content");
+
+let fontSize=1.8;
+
+content.querySelectorAll("li,p").forEach(el=>{
+el.style.fontSize=fontSize+"cqw";
+});
+
+let attempts=0;
+
+while(content.scrollHeight>content.clientHeight && fontSize>1.1 && attempts<15){
+
+fontSize-=0.1;
+
+content.querySelectorAll("li,p").forEach(el=>{
+el.style.fontSize=fontSize+"cqw";
+});
+
+attempts++;
+
+}
+
+}
+
+
+/* UPLOAD FAN PHOTO */
+
+function loadPhoto(event){
+
+const file=event.target.files[0];
+
+if(!file)return;
+
+if(!file.type.startsWith("image/")){
+alert("Please select an image.");
+return;
+}
+
+if(file.size>5*1024*1024){
+alert("Image must be smaller than 5MB.");
+return;
+}
+
+const reader=new FileReader();
+
+reader.onload=()=>{
+document.getElementById("fanPhoto").src=reader.result;
+};
+
+reader.readAsDataURL(file);
+
+}
+
+
+/* DOWNLOAD CARD */
+
+async function downloadCard(id,filename){
+
+const element=document.getElementById(id);
+
+const buttons=document.querySelectorAll("button.action");
+
+buttons.forEach(b=>b.disabled=true);
+
+try{
+
+await document.fonts.ready;
+
+const images=Array.from(element.querySelectorAll("img"));
+
+await Promise.all(images.map(img=>{
+
+if(img.complete)return Promise.resolve();
+
+return new Promise(resolve=>{
+
+img.onload=resolve;
+img.onerror=resolve;
+
+});
+
+}));
+
+const canvas=await html2canvas(element,{
+
+scale:4,
+useCORS:true,
+allowTaint:false,
+backgroundColor:null,
+logging:false
+
+});
+
+const link=document.createElement("a");
+
+link.download=filename;
+
+link.href=canvas.toDataURL("image/png");
+
+link.click();
+
+}catch(error){
+
+console.error(error);
+
+alert("Download failed. Please check your internet connection and try again.");
+
+}finally{
+
+buttons.forEach(b=>b.disabled=false);
+
+}
+
+}
+
+
+/* INITIALIZE */
+
+renderCelebs();
+
+generateID();
+
+loadCelebrityImages();
+
+</script>
+
+</body>
+</html>
 
